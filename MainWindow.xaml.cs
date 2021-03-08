@@ -25,7 +25,7 @@ namespace Calculator
         string op = "";
         bool exeptionHappened = false;
 
-        public CalculationTree calculationTree = new CalculationTree();
+        CalculationTree calculationTree = new CalculationTree();
 
         public MainWindow()
         {
@@ -39,17 +39,21 @@ namespace Calculator
             String strnum = button.Content.ToString();
 
             if (txtValue.Text == "0" | exeptionHappened)
-            { 
+            {
                 txtValue.Text = strnum;
                 exeptionHappened = false;
+                calculationTree.Add(txtValue.Text, NodeType.number, false);
             }
             else
+            {
                 txtValue.Text += strnum;
+                calculationTree.ChangeCurrentValue(txtValue.Text, NodeType.number);
+            }
+        }
 
-            if (op == "")
-                numL = Double.Parse(txtValue.Text);
-            else
-                numR = Double.Parse(txtValue.Text);
+        private void btn_bracket(object sender, RoutedEventArgs e)
+        {
+
         }
 
         // detects operation button pushes
@@ -59,27 +63,35 @@ namespace Calculator
 
             Button button = (Button)sender;
             op = button.Content.ToString();
+
+            if (calculationTree.CurrentType() == NodeType.operation)
+                calculationTree.ChangeCurrentValue(op);
+            else if (calculationTree.CurrentType() == NodeType.number)
+                calculationTree.SwapCurrentTo(op, NodeType.operation);
+
             txtValue.Text = "0";
         }
 
-        // calculates result after pushing " = "
-        private void btn_eq(object sender, RoutedEventArgs e)
+        private void DoEquation()
         {
             double result = 0;
-
-            if (exeptionHappened)
-            {
-                exeptionHappened = false;
-                txtValue.Text = "0";
-                op = "";
-                numL = 0;
-                numR = 0;
-                return;
-            }
+            string operation = "";
 
             try
             {
-                switch (op)
+                numL = Double.Parse(calculationTree.GetLeftChildData());
+
+                if (calculationTree.Current.RightNode == null)
+                    calculationTree.Add(txtValue.Text, NodeType.number, false);
+
+                numR = Double.Parse(calculationTree.GetRightChildData());
+
+                if (calculationTree.CurrentType() != NodeType.operation)
+                    operation = "";
+
+                operation = calculationTree.CurrentData();
+
+                switch (operation)
                 {
                     case "*":
                         result = numL * numR;
@@ -101,47 +113,71 @@ namespace Calculator
                         if (numL < 0 & numR == 0) throw new DivideByZeroException();
                         result = Math.Pow(numL, numR);
                         break;
-                    case "1/x":
-                        if (numL == 0) throw new DivideByZeroException();
-                        result = 1 / numL;
-                        break;
                     case "":
                         result = numL;
                         break;
                 }
 
-                txtValue.Text = result.ToString();
-                op = "";
-                numL = result;
-                numR = 0;
+                calculationTree.ReduceCurrentTo(result.ToString(), NodeType.number);
             }
 
             catch (DivideByZeroException)
             {
-                exeptionHappened = true;
                 txtValue.Text = "Division by zero";
+                exeptionHappened = true;
                 op = "";
                 numL = 0;
                 numR = 0;
+                calculationTree.ClearTree();
             }
             catch (Exception)
             {
-                exeptionHappened = true;
-                btn_clear(sender, e);
                 txtValue.Text = "Error occurence";
+                exeptionHappened = true;
+                op = "";
+                numL = 0;
+                numR = 0;
+                calculationTree.ClearTree();
             }
         }
 
+        // calculates result after pushing " = "
+        private void btn_eq(object sender, RoutedEventArgs e)
+        {
+            if (exeptionHappened)
+            {
+                exeptionHappened = false;
+                txtValue.Text = "0";
+                op = "";
+                numL = 0;
+                numR = 0;
+                return;
+            }
+
+            do { DoEquation(); }
+            while (calculationTree.Current.Parent != null);
+
+            txtValue.Text = calculationTree.CurrentData();
+        }
+
         // clears everything from input
-        private void btn_clear(object sender, RoutedEventArgs e)
+        private void btn_C(object sender, RoutedEventArgs e)
         {
             exeptionHappened = false;
-
-            if (op == "")
-                numL = 0;
-            else
-                numR = 0;
             txtValue.Text = "0";
+
+            calculationTree.ClearTree();
+        }
+
+        private void btn_CE(object sender, RoutedEventArgs e)
+        {
+            exeptionHappened = false;
+            txtValue.Text = "0";
+
+            if (calculationTree.CurrentType() == NodeType.operation)
+                calculationTree.ReduceCurrentTo(txtValue.Text, NodeType.number);
+            else
+                calculationTree.ChangeCurrentValue(txtValue.Text, NodeType.number);
         }
 
         // deletes last input symbol
@@ -151,10 +187,7 @@ namespace Calculator
 
             txtValue.Text = DeleteLastSym(txtValue.Text);
 
-            if (op == "")
-                numL = Double.Parse(txtValue.Text);
-            else
-                numR = Double.Parse(txtValue.Text);
+            calculationTree.ChangeCurrentValue(txtValue.Text);
         }
 
         private string DeleteLastSym(string str)
@@ -174,16 +207,21 @@ namespace Calculator
         private void btn_plusminus(object sender, RoutedEventArgs e)
         {
             if (exeptionHappened) return;
+            double num = 0;
 
-            if (op == "")
+            if (calculationTree.CurrentType() == NodeType.operation)
             {
-                numL *= -1;
-                txtValue.Text = numL.ToString();
+                num = Double.Parse(calculationTree.GetRightChildData());
+                num *= -1;
+                txtValue.Text = num.ToString();
+                calculationTree.Add(txtValue.Text, NodeType.number);
             }
             else
             {
-                numR *= -1;
-                txtValue.Text = numR.ToString();
+                num = Double.Parse(calculationTree.CurrentData());
+                num *= -1;
+                txtValue.Text = num.ToString();
+                calculationTree.ChangeCurrentValue(txtValue.Text, NodeType.number);
             }
         }
 
