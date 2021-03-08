@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Calculator"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="500">
+        Title="Calculator" Background="Transparent"  Height="450" Width="500">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition />
@@ -62,6 +62,6 @@
         <Button Grid.Column="3" Grid.Row="1" x:Name="btn_del" Click="btn_delete" Content="&lt;=" FontSize="30" Background="DarkGray"></Button>
 
         <!-- TextBox -->
-        <TextBox Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="4" TextAlignment="Right" VerticalAlignment="Center" FontSize="45" x:Name="txtValue">0</TextBox>
+        <TextBox Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="4" TextAlignment="Right" VerticalAlignment="Center" Background="Transparent" FontSize="45" x:Name="txtValue">0</TextBox>
     </Grid>
 </Window>

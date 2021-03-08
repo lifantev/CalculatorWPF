@@ -25,6 +25,8 @@ namespace Calculator
         string op = "";
         bool exeptionHappened = false;
 
+        public CalculationTree calculationTree = new CalculationTree();
+
         public MainWindow()
         {
             InitializeComponent();
